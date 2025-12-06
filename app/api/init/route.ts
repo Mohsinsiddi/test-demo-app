@@ -41,6 +41,12 @@ export async function POST() {
       console.log('✅ Created tips collection');
     }
 
+    // Transactions collection (NEW)
+    if (!existingNames.includes(COLLECTIONS.TRANSACTIONS)) {
+      await db.createCollection(COLLECTIONS.TRANSACTIONS);
+      console.log('✅ Created transactions collection');
+    }
+
     // Create indexes for performance
     console.log('🔧 Creating indexes...');
 
@@ -72,14 +78,27 @@ export async function POST() {
     await db.collection(COLLECTIONS.ORDERS).createIndex({ buyer: 1 });
     await db.collection(COLLECTIONS.ORDERS).createIndex({ seller: 1 });
     await db.collection(COLLECTIONS.ORDERS).createIndex({ status: 1 });
+    await db.collection(COLLECTIONS.ORDERS).createIndex({ txHash: 1 }, { unique: true });
     await db.collection(COLLECTIONS.ORDERS).createIndex({ createdAt: -1 });
     console.log('✅ Orders indexes created');
 
     // Tips indexes
     await db.collection(COLLECTIONS.TIPS).createIndex({ from: 1 });
     await db.collection(COLLECTIONS.TIPS).createIndex({ to: 1 });
+    await db.collection(COLLECTIONS.TIPS).createIndex({ txHash: 1 }, { unique: true });
     await db.collection(COLLECTIONS.TIPS).createIndex({ createdAt: -1 });
     console.log('✅ Tips indexes created');
+
+    // Transactions indexes (NEW)
+    await db.collection(COLLECTIONS.TRANSACTIONS).createIndex(
+      { txHash: 1 }, 
+      { unique: true }
+    );
+    await db.collection(COLLECTIONS.TRANSACTIONS).createIndex({ status: 1 });
+    await db.collection(COLLECTIONS.TRANSACTIONS).createIndex({ type: 1 });
+    await db.collection(COLLECTIONS.TRANSACTIONS).createIndex({ from: 1, createdAt: -1 });
+    await db.collection(COLLECTIONS.TRANSACTIONS).createIndex({ createdAt: -1 });
+    console.log('✅ Transactions indexes created');
 
     // Get collection stats
     const stats = {
@@ -88,6 +107,7 @@ export async function POST() {
       content: await db.collection(COLLECTIONS.CONTENT).countDocuments(),
       orders: await db.collection(COLLECTIONS.ORDERS).countDocuments(),
       tips: await db.collection(COLLECTIONS.TIPS).countDocuments(),
+      transactions: await db.collection(COLLECTIONS.TRANSACTIONS).countDocuments(),
     };
 
     console.log('✅ Database initialization complete!');
@@ -129,7 +149,7 @@ export async function GET() {
         database: 'basepay',
         collections: collectionNames,
         stats,
-        initialized: collectionNames.includes('users'),
+        initialized: collectionNames.includes('users') && collectionNames.includes('transactions'),
       },
     });
   } catch (error) {

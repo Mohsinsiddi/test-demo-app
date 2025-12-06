@@ -8,5 +8,8 @@ export { useStats } from './use-stats';
 export { useLike } from './use-like';
 export { useSeedStatus, useSeedDatabase } from './use-seed';
 
-// Contract Hooks (Phase 1A)
+// Transaction Hooks (Phase 1)
+export { useTransaction, useTransactionFlow } from './use-transaction';
+
+// Contract Hooks
 export * from './contract';

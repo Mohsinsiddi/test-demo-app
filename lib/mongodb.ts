@@ -38,4 +38,5 @@ export const COLLECTIONS = {
   CONTENT: 'content',
   ORDERS: 'orders',
   TIPS: 'tips',
+  TRANSACTIONS: 'transactions',
 } as const;

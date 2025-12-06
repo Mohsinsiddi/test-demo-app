@@ -99,6 +99,62 @@ export interface Tip {
   createdAt: Date;
 }
 
+// ============================================
+// TRANSACTION TYPES (Phase 1)
+// ============================================
+
+export type TransactionType = 'purchase' | 'tip' | 'register' | 'create_product';
+
+export type TransactionStatus = 
+  | 'pending'      // TX submitted to blockchain, waiting
+  | 'confirmed'    // TX confirmed on blockchain
+  | 'failed'       // TX failed
+  | 'processed';   // DB fully updated
+
+export interface Transaction {
+  _id?: string;
+  txHash: string;
+  type: TransactionType;
+  status: TransactionStatus;
+  
+  // Participants
+  from: string;
+  to?: string;
+  
+  // Transaction details
+  amount?: string;
+  fee?: string;
+  paymentToken?: string;
+  
+  // Related entities (for linking after confirmation)
+  productId?: string;          // MongoDB product ID
+  contentId?: string;          // MongoDB content ID
+  orderId?: string;            // MongoDB order ID (created after confirmation)
+  tipId?: string;              // MongoDB tip ID (created after confirmation)
+  contractProductId?: number;  // On-chain product ID
+  
+  // Blockchain data (filled after confirmation)
+  blockNumber?: number;
+  blockHash?: string;
+  gasUsed?: string;
+  
+  // Error handling
+  error?: string;
+  
+  // Timestamps
+  createdAt: Date;
+  updatedAt: Date;
+  confirmedAt?: Date;
+  processedAt?: Date;
+}
+
+export interface TransactionReceipt {
+  blockNumber: number;
+  blockHash: string;
+  gasUsed: string;
+  status: 'success' | 'reverted';
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;
