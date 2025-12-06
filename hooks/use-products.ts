@@ -9,6 +9,18 @@ interface ProductsResponse {
   hasMore: boolean;
 }
 
+interface SingleProductResponse {
+  product: Product;
+  seller: {
+    displayName?: string;
+    storeName?: string;
+    tier?: number;
+    avatar?: string;
+    location?: string;
+    wallet?: string;
+  } | null;
+}
+
 interface CreateProductData {
   seller: string;
   title: string;
@@ -53,14 +65,17 @@ export function useProducts(options?: {
 export function useProduct(id: string) {
   return useQuery({
     queryKey: ["product", id],
-    queryFn: async () => {
+    queryFn: async (): Promise<SingleProductResponse> => {
+      console.log('📡 Fetching product:', id);
       const res = await fetch(`/api/products/${id}`);
       const json = await res.json();
       
       if (!json.success) throw new Error(json.error);
+      console.log('📡 Product data:', json.data);
       return json.data;
     },
     enabled: !!id,
+    staleTime: 1000 * 60 * 2,
   });
 }
 
@@ -81,6 +96,29 @@ export function useCreateProduct() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["feed"] });
+    },
+  });
+}
+
+export function useUpdateProduct() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...data }: { id: string } & Partial<CreateProductData>): Promise<Product> => {
+      const res = await fetch(`/api/products/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      
+      if (!json.success) throw new Error(json.error);
+      return json.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["product", variables.id] });
       queryClient.invalidateQueries({ queryKey: ["feed"] });
     },
   });
