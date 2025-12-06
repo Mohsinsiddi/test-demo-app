@@ -4,13 +4,28 @@ import { useEffect, useState, useCallback } from "react";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { SplashScreen } from "@/components/splash-screen";
 import { useUser } from "@/hooks/use-user";
+import { useFeed, FilterType } from "@/hooks/use-feed";
+import { useSeedStatus, useSeedDatabase } from "@/hooks/use-seed";
+import { FeedFilters } from "@/components/feed/feed-filters";
+import { FeedList } from "@/components/feed/feed-list";
+import { StatsBanner } from "@/components/feed/stats-banner";
 import { APP_NAME } from "@/lib/constants";
+import { Loader2, Database } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function Home() {
   const [showSplash, setShowSplash] = useState(true);
+  const [filter, setFilter] = useState<FilterType>('all');
   const { setMiniAppReady, isMiniAppReady } = useMiniKit();
-  const { user, isLoading, isConnected, needsOnboarding, address } = useUser();
+  const { user, isLoading: isUserLoading, isConnected, needsOnboarding, address } = useUser();
+  
+  // Feed data
+  const { data: feedData, isLoading: isFeedLoading, error: feedError } = useFeed(filter);
+  
+  // Seed status
+  const { data: seedStatus } = useSeedStatus();
+  const seedMutation = useSeedDatabase();
 
   useEffect(() => {
     if (!isMiniAppReady) {
@@ -22,11 +37,20 @@ export default function Home() {
     setShowSplash(false);
   }, []);
 
+  const handleSeedDatabase = async () => {
+    try {
+      await seedMutation.mutateAsync();
+      toast.success('Database seeded with demo data!');
+    } catch (error) {
+      toast.error('Failed to seed database');
+    }
+  };
+
   if (showSplash) {
     return <SplashScreen onComplete={handleSplashComplete} />;
   }
 
-  if (isConnected && isLoading) {
+  if (isConnected && isUserLoading) {
     return (
       <div className="p-4 flex items-center justify-center min-h-[50vh]">
         <div className="text-center">
@@ -74,9 +98,13 @@ export default function Home() {
     }
   };
 
+  // Check if we need to show seed button
+  const showSeedButton = seedStatus && !seedStatus.seeded;
+
   return (
-    <div className="p-4">
-      <div className="glass-card-highlight p-6 mb-6">
+    <div className="p-4 space-y-4">
+      {/* Welcome Card */}
+      <div className="glass-card-highlight p-5">
         <h2 className="text-xl font-bold mb-2">
           {user ? `Welcome back${user.displayName ? `, ${user.displayName}` : ''}! 👋` : `Welcome to ${APP_NAME} 👋`}
         </h2>
@@ -96,7 +124,37 @@ export default function Home() {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      {/* Seed Database Button (only if no data) */}
+      {showSeedButton && (
+        <div className="glass-card p-4 border-2 border-dashed border-[var(--pay-blue)]/50">
+          <div className="flex items-center gap-3">
+            <Database className="w-8 h-8 text-[var(--pay-blue)]" />
+            <div className="flex-1">
+              <h3 className="font-semibold text-sm">Database is empty</h3>
+              <p className="text-xs text-[var(--muted-foreground)]">
+                Add demo data to see the feed in action
+              </p>
+            </div>
+            <button
+              onClick={handleSeedDatabase}
+              disabled={seedMutation.isPending}
+              className="btn-pay text-sm py-2 px-4 flex items-center gap-2"
+            >
+              {seedMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Seeding...
+                </>
+              ) : (
+                'Seed Data'
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 gap-3">
         <Link href="/explore" className="glass-card p-4 card-hover block">
           <div className="text-2xl mb-2">🛍️</div>
           <h3 className="font-semibold text-sm">Browse Products</h3>
@@ -107,73 +165,49 @@ export default function Home() {
           <h3 className="font-semibold text-sm">Discover Creators</h3>
           <p className="text-xs text-[var(--muted-foreground)]">Support talent</p>
         </Link>
-        <div className="glass-card p-4 card-hover">
-          <div className="text-2xl mb-2">💰</div>
-          <h3 className="font-semibold text-sm">Earn $PAY</h3>
-          <p className="text-xs text-[var(--muted-foreground)]">Rewards & cashback</p>
-        </div>
-        <Link href="/create" className="glass-card p-4 card-hover block">
-          <div className="text-2xl mb-2">🏪</div>
-          <h3 className="font-semibold text-sm">Start Selling</h3>
-          <p className="text-xs text-[var(--muted-foreground)]">List your products</p>
-        </Link>
       </div>
 
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold mb-3">Trending Now 🔥</h3>
-        
-        <div className="glass-card overflow-hidden card-hover mb-4">
-          <div className="h-40 bg-gradient-to-br from-[var(--pay-blue)]/20 to-[var(--pay-purple)]/20 flex items-center justify-center">
-            <span className="text-4xl">🎧</span>
-          </div>
-          <div className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="badge-verified">✓ Verified</span>
-            </div>
-            <h4 className="font-semibold mb-1">Premium Wireless Headphones</h4>
-            <p className="text-xs text-[var(--muted-foreground)] mb-3">TechStore Official</p>
-            <div className="flex items-center justify-between">
-              <span className="price-gradient text-lg">₹2,999</span>
-              <button className="btn-pay text-sm py-2 px-4">Buy Now</button>
-            </div>
-          </div>
+      {/* Feed Section */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold">Feed 🔥</h3>
+          {feedData && (
+            <span className="text-xs text-[var(--muted-foreground)]">
+              {feedData.total} items
+            </span>
+          )}
         </div>
 
-        <div className="glass-card overflow-hidden card-hover">
-          <div className="h-32 bg-gradient-to-br from-[var(--pay-purple)]/20 to-[var(--pay-green)]/20 flex items-center justify-center relative">
-            <span className="text-4xl">▶️</span>
-            <span className="absolute bottom-2 right-2 badge-live">Live</span>
+        {/* Filters */}
+        <FeedFilters activeFilter={filter} onFilterChange={setFilter} />
+
+        {/* Feed Error */}
+        {feedError && (
+          <div className="glass-card p-4 border border-red-500/30 mt-4">
+            <p className="text-red-400 text-sm">Failed to load feed. Please try again.</p>
           </div>
-          <div className="p-4">
-            <h4 className="font-semibold mb-1">Building the Future of Commerce</h4>
-            <p className="text-xs text-[var(--muted-foreground)] mb-3">@TechCreator • 12K views</p>
-            <div className="flex items-center justify-between">
-              <div className="flex gap-4 text-xs text-[var(--muted-foreground)]">
-                <span>❤️ 1.2K</span>
-                <span>💬 45</span>
-              </div>
-              <button className="tip-button text-sm py-2 px-4">💰 Tip</button>
-            </div>
-          </div>
+        )}
+
+        {/* Feed List */}
+        <div className="mt-4">
+          <FeedList 
+            items={feedData?.items || []} 
+            isLoading={isFeedLoading} 
+          />
         </div>
+
+        {/* Load More */}
+        {feedData?.hasMore && (
+          <div className="mt-4 text-center">
+            <button className="btn-secondary text-sm py-2 px-6">
+              Load More
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="glass-card-success p-4">
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <div className="text-xl font-bold text-[var(--pay-green)]">1,234</div>
-            <div className="text-xs text-[var(--muted-foreground)]">Products</div>
-          </div>
-          <div>
-            <div className="text-xl font-bold text-[var(--pay-purple)]">567</div>
-            <div className="text-xs text-[var(--muted-foreground)]">Creators</div>
-          </div>
-          <div>
-            <div className="text-xl font-bold text-[var(--pay-blue)]">89</div>
-            <div className="text-xs text-[var(--muted-foreground)]">Stores</div>
-          </div>
-        </div>
-      </div>
+      {/* Stats Banner */}
+      <StatsBanner />
     </div>
   );
 }
