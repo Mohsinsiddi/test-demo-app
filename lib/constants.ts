@@ -4,8 +4,8 @@ export const PREMIUM_FEE = 50n;
 export const BASIS_POINTS = 10000n;
 export const PREMIUM_THRESHOLD = 50_000n * 10n ** 18n;
 
-export const PAYMENT_HUB_ADDRESS = process.env.NEXT_PUBLIC_PAYMENT_HUB_ADDRESS || '0x...';
-export const BASE_PAY_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_BASE_PAY_TOKEN_ADDRESS || '0x...';
+export const PAYMENT_HUB_ADDRESS = process.env.NEXT_PUBLIC_PAYMENT_HUB_ADDRESS || '0x80e271b9f9ef8bdeE1F6E4B18d41993CBB6f77c7';
+export const BASE_PAY_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_BASE_PAY_TOKEN_ADDRESS || '0xED9B7aA813272C69056Eae07f3E7C9C1f5475D1d';
 
 export const APP_NAME = 'BasePay';
 export const APP_TAGLINE = 'Social Commerce on Base';

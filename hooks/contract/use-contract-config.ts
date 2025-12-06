@@ -4,7 +4,7 @@ import { useAccount, useChainId } from "wagmi";
 import { PAYMENT_HUB_ABI, ERC20_ABI } from "@/lib/contract-abi";
 
 const CONTRACT_ADDRESSES: Record<number, `0x${string}`> = {
-  8453: process.env.NEXT_PUBLIC_PAYMENT_HUB_ADDRESS_MAINNET as `0x${string}` || "0x0000000000000000000000000000000000000000",
+  8453: process.env.NEXT_PUBLIC_PAYMENT_HUB_ADDRESS_MAINNET as `0x${string}` || "0x80e271b9f9ef8bdeE1F6E4B18d41993CBB6f77c7",
   84532: process.env.NEXT_PUBLIC_PAYMENT_HUB_ADDRESS as `0x${string}` || "0x0000000000000000000000000000000000000000",
   31337: "0x5FbDB2315678afecb367f032d93F642f64180aa3" as `0x${string}`,
 };
