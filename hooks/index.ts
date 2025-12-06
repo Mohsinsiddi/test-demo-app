@@ -7,6 +7,8 @@ export { useContent, useCreateContent } from './use-content';
 export { useStats } from './use-stats';
 export { useLike } from './use-like';
 export { useSeedStatus, useSeedDatabase } from './use-seed';
+export { useSearch } from './use-search';
+export type { SearchResult, SearchResponse } from './use-search';
 
 // Transaction Hooks
 export { useTransaction, useTransactionFlow } from './use-transaction';
