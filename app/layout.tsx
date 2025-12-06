@@ -3,6 +3,9 @@ import { Inter, Source_Code_Pro } from "next/font/google";
 import { SafeArea } from "@coinbase/onchainkit/minikit";
 import { minikitConfig } from "@/minikit.config";
 import { RootProvider } from "./rootProvider";
+import { Header } from "@/components/layout/header";
+import { BottomNav } from "@/components/layout/bottom-nav";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -44,7 +47,16 @@ export default function RootLayout({
     <RootProvider>
       <html lang="en">
         <body className={`${inter.variable} ${sourceCodePro.variable}`}>
-          <SafeArea>{children}</SafeArea>
+          <SafeArea>
+            <div className="min-h-screen gradient-bg flex flex-col">
+              <Header />
+              <main className="flex-1 pb-20">
+                {children}
+              </main>
+              <BottomNav />
+            </div>
+            <Toaster position="top-center" richColors />
+          </SafeArea>
         </body>
       </html>
     </RootProvider>
